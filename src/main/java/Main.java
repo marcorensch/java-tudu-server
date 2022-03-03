@@ -16,8 +16,9 @@ public class Main {
         get("/todos", "application/json", (req, res) -> {
             res.header("Content-Type", "application/json;charset=utf-8");
             List<TodoItem> todos = List.of(
-                    TodoItem.create("Mein erster Task", "Die beschreibung"),
-                    TodoItem.create("Mein zweiter Task", "Die Beschreibung")
+                    TodoItem.create(1,"Mein erster Task", "Die beschreibung"),
+                    TodoItem.create(2,"Mein zweiter Task", "Die Beschreibung")
+                    TodoItem.create(2,"Mein dritter Task", "Die dritte Beschreibung")
             );
             return new JSONSerializer().serialize(todos);
         });

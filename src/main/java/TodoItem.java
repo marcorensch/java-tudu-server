@@ -1,5 +1,5 @@
 public class TodoItem {
-    public Long id;
+    public int id;
     public String label;
     public String description;
 
@@ -12,5 +12,12 @@ public class TodoItem {
         return td;
     }
 
+    public static TodoItem create(int id, String label, String description){
+        TodoItem td = new TodoItem();
+        td.id = id;
+        td.label = label;
+        td.description = description;
+        return td;
+    }
 
 }
