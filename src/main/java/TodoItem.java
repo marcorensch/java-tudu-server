@@ -1,5 +1,5 @@
 public class TodoItem {
-    public int id;
+    public Long id;
     public String label;
     public String description;
 
@@ -12,7 +12,7 @@ public class TodoItem {
         return td;
     }
 
-    public static TodoItem create(int id, String label, String description){
+    public static TodoItem create(Long id, String label, String description){
         TodoItem td = new TodoItem();
         td.id = id;
         td.label = label;
@@ -20,4 +20,12 @@ public class TodoItem {
         return td;
     }
 
+    public Long getId(){
+        return this.id;
+    }
+
+    @Override
+    public String toString() {
+        return new JSONSerializer().serialize(this);
+    }
 }
