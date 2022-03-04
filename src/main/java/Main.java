@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.eclipse.jetty.http.HttpStatus;
 
 import java.util.ArrayList;
@@ -41,6 +42,17 @@ public class Main {
             if(oldLength <= todos.size()){
                 res.status(406);
             }
+
+            return new JSONSerializer().serialize(todos);
+        });
+
+        post("/todos/", "application/json", (req, res) -> {
+            res.header("Content-Type", "application/json;charset=utf-8");
+
+            TodoItem newItem = new JSONSerializer().deserialize(req.body(), new TypeReference<TodoItem>() {});
+
+            System.out.println(req.body());
+            todos.add(newItem);
 
             return new JSONSerializer().serialize(todos);
         });

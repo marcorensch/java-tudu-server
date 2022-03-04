@@ -1,9 +1,13 @@
 public class TodoItem {
+    public static int count;
+
     public Long id;
     public String label;
     public String description;
 
-    private TodoItem() {}
+    private TodoItem() {
+        this.id = (long) (count++ + 1);
+    }
 
     public static TodoItem create(String label, String description){
         TodoItem td = new TodoItem();
