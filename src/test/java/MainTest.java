@@ -74,7 +74,7 @@ public class MainTest {
     }
 
     @Test
-    public void deleteOneToDoWithInvalidID_returnsStatusCode406() throws IOException, InterruptedException {
+    public void deleteOneToDoWithInvalidID_returnsStatusCode404() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .DELETE()
                 .uri(URI.create("http://localhost:4567/todos/999923949239422"))
@@ -84,7 +84,7 @@ public class MainTest {
         HttpClient client = HttpClient.newBuilder().build();
         var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assert.assertEquals(406, response.statusCode());
+        Assert.assertEquals(404, response.statusCode());
     }
 
     @Test

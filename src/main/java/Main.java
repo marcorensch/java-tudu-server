@@ -53,10 +53,12 @@ public class Main {
 
             System.out.println(todos.size());
             if(!success){
-                res.status(406);
+                res.status(404);
+            }else{
+                res.status(HttpStatus.NO_CONTENT_204);
             }
 
-            return new JSONSerializer().serialize(todos);
+            return "";
         });
 
         post("/todos", "application/json", (req, res) -> {
