@@ -1,10 +1,7 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.eclipse.jetty.http.HttpStatus;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static spark.Spark.*;
 
@@ -30,31 +27,54 @@ public class Main {
             return new JSONSerializer().serialize(todos);
         });
 
+        get("/todos/:id", "application/json", (req, res) -> {
+            res.header("Content-Type", "application/json;charset=utf-8");
+
+            Long idToRead = Long.valueOf(req.params().get(":id"));
+
+            for(var item : todos){
+                if(item.getId().equals(idToRead)){
+                    res.status(200);
+                    return new JSONSerializer().serialize(item);
+                }
+            }
+
+            return null;
+        });
+
         delete("/todos/:id", "application/json", (req, res) -> {
             res.header("Content-Type", "application/json;charset=utf-8");
             int oldLength = todos.size();
             System.out.println(oldLength);
-            Long id = Long.valueOf(req.params().get(":id"));
+            Long idToDelete = Long.valueOf(req.params().get(":id"));
+            // Long id = Long.valueOf(req.params("id"));
 
-            todos.removeIf( e -> e.getId().equals(id));
+            boolean success = todos.removeIf( todoItem -> todoItem.getId().equals(idToDelete));
 
             System.out.println(todos.size());
-            if(oldLength <= todos.size()){
+            if(!success){
                 res.status(406);
             }
 
             return new JSONSerializer().serialize(todos);
         });
 
-        post("/todos/", "application/json", (req, res) -> {
+        post("/todos", "application/json", (req, res) -> {
             res.header("Content-Type", "application/json;charset=utf-8");
 
-            TodoItem newItem = new JSONSerializer().deserialize(req.body(), new TypeReference<TodoItem>() {});
+            final TodoItem newItem = new JSONSerializer().deserialize(req.body(), new TypeReference<>() {});
+
+            newItem.id = (long) new Random().nextInt(1_000_000);
 
             System.out.println(req.body());
-            todos.add(newItem);
 
-            return new JSONSerializer().serialize(todos);
+            // todos.add ==> Immer True mit Arraylist aber vorbereitet für mit Server
+            if(todos.add(newItem)){
+                res.status(201);
+                return new JSONSerializer().serialize(newItem);
+            }
+
+            return null;
         });
     }
 }

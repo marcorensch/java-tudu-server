@@ -4,12 +4,58 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainTest {
+    @Test
+    public void getTodos_should_returnListWith200OK() throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI("http://localhost:4567/todos"))
+                .GET()
+                .header("accept", "application/json")
+                .build();
+
+        final HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals("application/json;charset=utf-8", response.headers().firstValue("content-type").get());
+        Assert.assertEquals(200, response.statusCode());
+
+        final List<TodoItem> todos = new JSONSerializer().deserialize(response.body(), new TypeReference<>() { });
+
+        Assert.assertTrue("Should have any items", 0 < todos.size());
+    }
+
+    @Test
+    public void deleteOneToDo_shouldDelete_andNoMoreRead() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .DELETE()
+                .uri(URI.create("http://localhost:4567/todos/1"))
+                .header("accept", "application/json")
+                .build();
+
+        HttpClient client = HttpClient.newBuilder().build();
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(200, response.statusCode());
+
+        HttpRequest verifyDelete = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://localhost:4567/todos/1"))
+                .header("accept", "application/json")
+                .build();
+
+        HttpClient VerifyClient = HttpClient.newBuilder().build();
+        var VerifyResponse = VerifyClient.send(verifyDelete, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(404, VerifyResponse.statusCode());
+
+    }
+
     @Test
     public void deleteOneToDoWithValidID_returnsStatusCode200() throws IOException, InterruptedException {
         // Schlechter Test weil das Item effektiv entfernt wird - kann nicht mehrfach ausgeführt werden
@@ -26,6 +72,7 @@ public class MainTest {
         Assert.assertEquals(200, response.statusCode());
 
     }
+
     @Test
     public void deleteOneToDoWithInvalidID_returnsStatusCode406() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
@@ -38,5 +85,35 @@ public class MainTest {
         var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         Assert.assertEquals(406, response.statusCode());
+    }
+
+    @Test
+    public void createTodo_shouldReturnStatus202AndReadIsPossible() throws IOException, InterruptedException {
+        TodoItem newToDo = TodoItem.create("Test", "Test ToDo");
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(new JSONSerializer().serialize(newToDo)))
+                .uri(URI.create("http://localhost:4567/todos"))
+                .header("accept", "application/json")
+                .build();
+
+        HttpClient client = HttpClient.newBuilder().build();
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(201, response.statusCode());
+
+        // Aufgaben: Wir erhalten oben in der Rsponse das Objekt zurück dieses können wir anschliessend die ID rausholen um mit get zu prüfen
+        TodoItem createdToDo = new JSONSerializer().deserialize(response.body(), new TypeReference<>() {});
+
+        HttpRequest checkReq = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://localhost:4567/todos"))
+                .header("accept", "application/json")
+                .build();
+
+        var checkResponse = client.send(checkReq,HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(200, checkResponse.statusCode());
+
+
     }
 }
