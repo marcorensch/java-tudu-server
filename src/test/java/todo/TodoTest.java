@@ -1,6 +1,10 @@
+package todo;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Test;
+import shared.infra.JSONSerializer;
+import todo.model.TodoItem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,7 +15,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainTest {
+public class TodoTest {
     @Test
     public void getTodos_should_returnListWith200OK() throws URISyntaxException, IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
@@ -41,7 +45,7 @@ public class MainTest {
         HttpClient client = HttpClient.newBuilder().build();
         var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals(204, response.statusCode());
 
         HttpRequest verifyDelete = HttpRequest.newBuilder()
                 .GET()
@@ -69,7 +73,7 @@ public class MainTest {
         HttpClient client = HttpClient.newBuilder().build();
         var response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals(204, response.statusCode());
 
     }
 
@@ -88,7 +92,7 @@ public class MainTest {
     }
 
     @Test
-    public void createTodo_shouldReturnStatus202AndReadIsPossible() throws IOException, InterruptedException {
+    public void createTodo_shouldReturnStatus201AndReadIsPossible() throws IOException, InterruptedException {
         TodoItem newToDo = TodoItem.create("Test", "Test ToDo");
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(new JSONSerializer().serialize(newToDo)))
@@ -113,7 +117,37 @@ public class MainTest {
         var checkResponse = client.send(checkReq,HttpResponse.BodyHandlers.ofString());
 
         Assert.assertEquals(200, checkResponse.statusCode());
+    }
 
+    @Test
+    public void getTodosWithFilterShouldReturnCustomElement() throws IOException, InterruptedException {
+        //PreFlight (Arrange):
+        TodoItem newToDo = TodoItem.create("Custom Filter Test Element2kF", "ToDo for Testing");
+        HttpRequest crequest = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(new JSONSerializer().serialize(newToDo)))
+                .uri(URI.create("http://localhost:4567/todos"))
+                .header("accept", "application/json")
+                .build();
 
+        HttpClient client = HttpClient.newBuilder().build();
+        var created = client.send(crequest, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(201, created.statusCode());
+
+        // Filtered GET Request (Act):
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://localhost:4567/todos?filter=custom%20filter%20test2kF"))
+                .header("accept", "application/json")
+                .build();
+
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        ArrayList<TodoItem> createdToDos = new JSONSerializer().deserialize(response.body(), new TypeReference<>() {});
+
+        // Check (Assert)
+        for (TodoItem item: createdToDos) {
+            Assert.assertEquals(newToDo.label, item.label);
+        }
     }
 }

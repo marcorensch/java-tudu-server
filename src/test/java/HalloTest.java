@@ -1,6 +1,8 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Test;
+import shared.infra.JSONSerializer;
+import todo.model.TodoItem;
 
 import java.io.IOException;
 import java.net.URI;

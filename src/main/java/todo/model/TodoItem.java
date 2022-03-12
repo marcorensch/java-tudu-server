@@ -1,3 +1,6 @@
+package todo.model;
+import shared.infra.JSONSerializer;
+
 public class TodoItem {
     public static int count;
 
