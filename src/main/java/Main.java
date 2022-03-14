@@ -2,6 +2,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.LoggerFactory;
 import shared.infra.JSONSerializer;
+import spark.Service;
 import todo.infra.TodoController;
 import todo.model.TodoItem;
 
@@ -19,7 +20,11 @@ public class Main {
 //            return "Thanks";
 //        });
 
-        new TodoController();
+        final Service server = Service.ignite();
+        server.port(4567);
+
+        // Hohe Kohesion = Aufsplittung
+        new TodoController(server, false);
 
     }
 }

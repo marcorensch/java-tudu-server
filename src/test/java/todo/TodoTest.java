@@ -1,9 +1,13 @@
 package todo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import shared.infra.JSONSerializer;
+import spark.Service;
+import todo.infra.TodoController;
 import todo.model.TodoItem;
 
 import java.io.IOException;
@@ -16,6 +20,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TodoTest {
+
+    Service server;
+
+    @Before
+    public void start(){
+        server = Service.ignite();
+        server.port(4567);
+
+        new TodoController(server, true);
+    }
+
+    @After
+    public void stop(){
+        server.stop();
+    }
+    @Test
+    public void getToDoById() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://localhost:4567/todos/1"))
+                .header("accept", "application/json")
+                .build();
+
+        HttpClient client = HttpClient.newBuilder().build();
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        Assert.assertEquals(200, response.statusCode());
+
+    }
+
     @Test
     public void getTodos_should_returnListWith200OK() throws URISyntaxException, IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
