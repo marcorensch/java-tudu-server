@@ -23,13 +23,13 @@ public class TodoController {
         var todoService = new TodoService(isTest ? new InMemoryRepository() : new SQLiteRepository());
 
         server.get("/todos", "application/json", (req, res) -> {
-            String json = "";
+            String json;
             if(req.queryParams("filter") != null){
                 // der Query Parameter enthält das Wort Filter
-                ArrayList filteredItems = todoService.getFilteredItems(req.queryParams("filter").toLowerCase(Locale.ROOT));
+                List filteredItems = todoService.getFilteredItems(req.queryParams("filter").toLowerCase(Locale.ROOT));
                 json = new JSONSerializer().serialize(filteredItems);
             }else{
-                ArrayList items = todoService.getAllItems();
+                List items = todoService.getAllItems();
                 json = new JSONSerializer().serialize(items);
             }
             res.status(HttpStatus.OK_200);
@@ -50,7 +50,7 @@ public class TodoController {
 
         server.delete("/todos/:id", "application/json", (req, res) -> {
 
-            Long idToDelete = Long.valueOf(req.params().get(":id"));
+            long idToDelete = Long.valueOf(req.params().get(":id"));
 
             if(!todoService.delete( idToDelete )){
                 res.status(404);
@@ -66,9 +66,11 @@ public class TodoController {
             System.out.println("post called");
             final TodoItem newItem = new JSONSerializer().deserialize(req.body(), new TypeReference<>() {});
 
-            if(todoService.add(newItem) > 0){
+            long createdId = todoService.add(newItem);
+
+            if(createdId > 0){
                 res.status(201);
-                return "";
+                return new JSONSerializer().serialize(createdId);
             }else{
                 // Server Error hier
                 // Todo: Header
@@ -84,11 +86,11 @@ public class TodoController {
         // Vor jedem Routen Aufruf
         server.before((req,res) ->{
             // kann in der Methode überschrieben werden:
-            res.header("Content-Type", "*/*;charset=utf-8");
+            res.header("Content-Type", "application/json;charset=utf-8");
         });
 
         // Nach jedem Routen Aufruf
-        server.after((Filter) (req, res) -> {
+        server.after((req, res) -> {
             res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");

@@ -140,11 +140,11 @@ public class TodoTest {
         Assert.assertEquals(201, response.statusCode());
 
         // Aufgaben: Wir erhalten oben in der Rsponse das Objekt zurück dieses können wir anschliessend die ID rausholen um mit get zu prüfen
-        TodoItem createdToDo = new JSONSerializer().deserialize(response.body(), new TypeReference<>() {});
+        long createdToDoId = new JSONSerializer().deserialize(response.body(), new TypeReference<>() {});
 
         HttpRequest checkReq = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create("http://localhost:4567/todos"))
+                .uri(URI.create("http://localhost:4567/todos/"+createdToDoId))
                 .header("accept", "application/json")
                 .build();
 
